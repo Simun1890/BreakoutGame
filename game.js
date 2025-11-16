@@ -56,8 +56,8 @@ let b = {
     y: H - 60,
     w: BS,
     h: BS,
-    dx: 3,             //brzina x os
-    dy: -3             //brzina y os, gore
+    dx: 2.5,             //brzina x os
+    dy: -2.5             //brzina y os, gore
 };
 
 //3D efekt
@@ -123,8 +123,8 @@ function init() {
     b.x = W / 2;
     b.y = H - 60;
     //Nasumičan smjer brzine u x osi
-    b.dx = 3 * (Math.random() < 0.5 ? -1 : 1);
-    b.dy = -3;
+    b.dx = 2.5 * (Math.random() < 0.5 ? -1 : 1);
+    b.dy = -2.5;
 
     //Ponovno generiranje blokova
     initBricks();
