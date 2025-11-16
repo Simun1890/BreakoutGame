@@ -12,9 +12,9 @@ const ROWS = 5;
 const COLS = 10;
 
 //Brzina palice, dimenzije palice i loptice
-const PS = 7;      
-const PW = 100;    
-const PH = 15;     
+const PS = 7;
+const PW = 100;
+const PH = 15;
 const BS = 10;     //bit ce kvadrat
 
 //Boje blokova
@@ -59,6 +59,28 @@ let b = {
     dx: 4,             //brzina x os
     dy: -4             //brzina y os, gore
 };
+
+//3D efekt
+function draw3DRect(x, y, w, h, baseColor) {
+    //Osnovno punjenje
+    ctx.fillStyle = baseColor;
+    ctx.fillRect(x, y, w, h);
+
+    //Svjetliji gornji rub
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x + w, y);
+    ctx.stroke();
+
+    //Tamniji donji rub
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.7)";
+    ctx.beginPath();
+    ctx.moveTo(x, y + h);
+    ctx.lineTo(x + w, y + h);
+    ctx.stroke();
+}
 
 //Stvaranje blokova(polje blokova(cigli) u dve dimenzije, svaki blok ima x,y,w,h,boju i aktivnost))
 function initBricks() {
@@ -141,25 +163,27 @@ document.addEventListener("keyup", (e) => {
 });
 
 //Iscrtavanje palice i loptice (pravokutnici):
-
 function drawRect(o) {
-    ctx.fillStyle = o.c || "#fff"; 
-    ctx.fillRect(o.x, o.y, o.w, o.h);
+    // Umjesto čistog fillRect, koristimo 3D pravokutnik
+    const color = o.c || "#fff";
+    draw3DRect(o.x, o.y, o.w, o.h, color);
 }
 
 //Ažuriranje igre(palica, loptica, sudari):
-
 function update() {
     //Nema igre, ne ažurira
     if (!run) return;
+
     //Palica
     p.x += p.dx;
     //Palica ne može izaći izvan ekrana
     if (p.x < 0) p.x = 0;
     if (p.x + PW > W) p.x = W - PW;
+
     //Loptica
     b.x += b.dx;
     b.y += b.dy;
+
     //Sudar s rubovima
     if (b.x < 0 || b.x + BS > W) {
         b.dx *= -1;
@@ -175,6 +199,7 @@ function update() {
         //Sprema se high score
         localStorage.setItem("hs", Math.max(hs, score));
     }
+
     //Sudar loptice s palicom
     if (
         b.x < p.x + PW &&
@@ -201,8 +226,10 @@ function update() {
                 //Blok pogođen
                 br.a = false;
                 score++;
+
                 //Promijeni smjer tj. brzinu po y osi
                 b.dy *= -1;
+
                 //Ako su sve cigle razbijene, pobjeđena igrica
                 if (score === ROWS * COLS) {
                     win = true;
@@ -218,48 +245,84 @@ function update() {
 }
 
 //Crtanje igre(pozadinu, blokove, palicu i lopticu, tekst):
-
 function draw() {
     //Pozadina(crno)
     ctx.fillStyle = "#000";
     ctx.fillRect(0, 0, W, H);
+    //Početni ekran
+    if (start) {
+        const centerX = W / 2;
+        const centerY = H / 2;
 
-    //Blokovi-samo aktivni
+        //BREAKOUT
+        ctx.fillStyle = "#fff";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.font = "bold 36px Verdana";
+        ctx.fillText("BREAKOUT", centerX, centerY);
+
+        //"Press SPACE to begin" tekst
+        ctx.font = "bold italic 18px Verdana";
+        ctx.fillText("Press SPACE to begin", centerX, centerY + 10 + 18);
+        return;
+    }
+
+    //Blokovi-samo aktivni (s 3D efektom)
     bricks
         .flat()
         .filter((x) => x.a)
         .forEach((br) => {
-            ctx.fillStyle = br.c;
-            ctx.fillRect(br.x, br.y, br.w, br.h);
+            draw3DRect(br.x, br.y, br.w, br.h, br.c);
         });
 
-    //Palica
+    //Palica (3D)
     drawRect({ ...p });
-    //Loptica
+
+    //Loptica (3D)
     drawRect({ ...b });
+
     //Rezultat i najbolji rezultat
+    ctx.textAlign = "left";
+    ctx.textBaseline = "top";
     ctx.fillStyle = "#fff";
-    ctx.fillText("Score: " + score, 10, 20);
+    ctx.font = "16px Verdana";
+    ctx.fillText("Score: " + score, 10, 10);
 
+    ctx.textAlign = "right";
     ctx.fillStyle = "#ff0";
-    ctx.fillText("Best: " + hs, 700, 20);
+    ctx.fillText("Best: " + hs, W - 10, 10);
 
-    //Početna poruka
+    //Početna poruka – po specifikaciji zadatka
     if (start) {
+        // BREAKOUT centriran
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
         ctx.fillStyle = "#fff";
-        ctx.fillText("PRESS SPACE", 350, 300);
+        ctx.font = "bold 36px Verdana";
+        ctx.fillText("BREAKOUT", W / 2, H / 2);
+
+        // "Press SPACE to begin" 10 px ispod
+        ctx.font = "italic bold 18px Verdana";
+        ctx.textBaseline = "top";
+        ctx.fillText("Press SPACE to begin", W / 2, H / 2 + 10);
     }
 
     //Poruka za izgubljenu igru
     if (lose) {
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
         ctx.fillStyle = "#ff0";
-        ctx.fillText("GAME OVER", 350, 300);
+        ctx.font = "bold 32px Verdana";
+        ctx.fillText("GAME OVER", W / 2, H / 2);
     }
 
     //Poruka za pobjedu
     if (win) {
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
         ctx.fillStyle = "#0f0";
-        ctx.fillText("YOU WIN!", 350, 300);
+        ctx.font = "bold 32px Verdana";
+        ctx.fillText("YOU WIN!", W / 2, H / 2);
     }
 }
 
